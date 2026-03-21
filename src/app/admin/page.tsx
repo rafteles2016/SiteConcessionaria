@@ -5,12 +5,14 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import AdminSidebar from '@/components/AdminSidebar'
 import { Vehicle } from '@/lib/types'
-import { Car, Bike, DollarSign, Package, Eye, Pencil, Trash2, CheckCircle, Instagram } from 'lucide-react'
+import { Car, Bike, DollarSign, Package, Eye, Pencil, Trash2, CheckCircle, Instagram, TrendingUp, CalendarDays } from 'lucide-react'
 import toast, { Toaster } from 'react-hot-toast'
 
 export default function AdminDashboard() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([])
   const [loading, setLoading] = useState(true)
+  const [filtroMes, setFiltroMes] = useState<string>('')
+  const [filtroAno, setFiltroAno] = useState<string>('')
   const router = useRouter()
 
   useEffect(() => {
@@ -80,10 +82,25 @@ export default function AdminDashboard() {
     }
   }
 
+  const vendidos = vehicles.filter(v => v.status === 'vendido')
+
+  const vendidosFiltrados = vendidos.filter(v => {
+    const data = new Date(v.updated_at || v.created_at)
+    if (filtroMes && (data.getMonth() + 1) !== parseInt(filtroMes)) return false
+    if (filtroAno && data.getFullYear() !== parseInt(filtroAno)) return false
+    return true
+  })
+
+  const faturamentoTotal = vendidosFiltrados.reduce((sum, v) => sum + (v.preco || 0), 0)
+
+  const anosDisponiveis = [...new Set(
+    vendidos.map(v => new Date(v.updated_at || v.created_at).getFullYear())
+  )].sort((a, b) => b - a)
+
   const stats = {
     total: vehicles.length,
     disponiveis: vehicles.filter(v => v.status === 'disponivel').length,
-    vendidos: vehicles.filter(v => v.status === 'vendido').length,
+    vendidos: vendidos.length,
     carros: vehicles.filter(v => v.tipo === 'carro').length,
     motos: vehicles.filter(v => v.tipo === 'moto').length,
   }
@@ -128,6 +145,69 @@ export default function AdminDashboard() {
               <span className="text-2xl font-bold text-white">{stats.carros} / {stats.motos}</span>
             </div>
             <p className="text-sm text-gray-400">Carros / Motos</p>
+          </div>
+        </div>
+
+        {/* Faturamento */}
+        <div className="bg-gray-800 rounded-2xl border border-gray-700 p-6 mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <h2 className="text-white font-semibold">Faturamento de Vendas</h2>
+                <p className="text-gray-400 text-xs">
+                  {vendidosFiltrados.length} veículo(s) vendido(s)
+                  {filtroMes || filtroAno ? ' no período' : ' no total'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="w-4 h-4 text-gray-400" />
+                <select
+                  value={filtroMes}
+                  onChange={(e) => setFiltroMes(e.target.value)}
+                  className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  <option value="">Todos os meses</option>
+                  <option value="1">Janeiro</option>
+                  <option value="2">Fevereiro</option>
+                  <option value="3">Março</option>
+                  <option value="4">Abril</option>
+                  <option value="5">Maio</option>
+                  <option value="6">Junho</option>
+                  <option value="7">Julho</option>
+                  <option value="8">Agosto</option>
+                  <option value="9">Setembro</option>
+                  <option value="10">Outubro</option>
+                  <option value="11">Novembro</option>
+                  <option value="12">Dezembro</option>
+                </select>
+              </div>
+              <select
+                value={filtroAno}
+                onChange={(e) => setFiltroAno(e.target.value)}
+                className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              >
+                <option value="">Todos os anos</option>
+                {anosDisponiveis.map(ano => (
+                  <option key={ano} value={ano}>{ano}</option>
+                ))}
+              </select>
+              {(filtroMes || filtroAno) && (
+                <button
+                  onClick={() => { setFiltroMes(''); setFiltroAno('') }}
+                  className="text-orange-400 text-sm hover:underline"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="text-3xl font-bold text-green-400">
+            R$ {faturamentoTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </div>
         </div>
 

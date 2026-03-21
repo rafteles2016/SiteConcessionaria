@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 })
     }
   } else {
-    query = query.eq('publicado', true)
+    query = query.eq('publicado', true).eq('status', 'disponivel')
   }
 
   if (tipo) query = query.eq('tipo', tipo)

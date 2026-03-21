@@ -35,6 +35,7 @@ export default function HomePage() {
   const marcas = filtroTipo === 'moto' ? MARCAS_MOTO : filtroTipo === 'carro' ? MARCAS_CARRO : [...new Set([...MARCAS_CARRO, ...MARCAS_MOTO])].sort()
 
   const vehiclesFiltrados = vehicles.filter(v => {
+    if (v.status === 'vendido') return false
     if (filtroBusca) {
       const busca = filtroBusca.toLowerCase()
       return (
